@@ -18,22 +18,27 @@ import java.util.List;
  * Description: ...
  */
 
-public class Dict extends JPanel implements ItemListener {
+public class Dict extends JPanel implements ItemListener{
+    //dictionary using hashmap with key is a string and value is arraylist for store multiple definition
     static HashMap<String, ArrayList<String> > dictionary = new HashMap<String, ArrayList<String>>();
-    List<String> history;
     JPanel cards;
-
+    static List<String> history = new ArrayList<>();
+    
+    
     public void addToHistory(String word){
-        try {
-            FileWriter fw = new FileWriter("data.txt", true);
-            BufferedWriter fWrite = new BufferedWriter(fw);
-            String test = "";
-            byte[] b = test.getBytes();
-            fWrite.write(test);
-            fWrite.flush();
-            fWrite.close();
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        if(word != "") {
+            history.add(0, word);
+            try {
+                FileWriter fw = new FileWriter("history.txt", true);
+                BufferedWriter fWrite = new BufferedWriter(fw);
+                for (int i = 0; i < history.size(); i++) {
+                    fWrite.write(history.get(i) + "\n");
+                }
+                fWrite.flush();
+                fWrite.close();
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
+            }
         }
     }
 
@@ -68,6 +73,9 @@ public class Dict extends JPanel implements ItemListener {
                 public void actionPerformed(ActionEvent e) {
                     result.setText("");
                     String word = inputWord.getText();
+                    //add word to history search
+                    addToHistory(word);
+                    //search for word
                     if(dictionary.get(word)!=null){
                         String def = "";
                         for (int i = 0; i < dictionary.get(word).size(); i++) {
@@ -119,6 +127,9 @@ public class Dict extends JPanel implements ItemListener {
                 public void actionPerformed(ActionEvent e) {
                     result.setText("");
                     String def = inputDef.getText();
+                    //add definition to history
+                    addToHistory(def);
+                    //search for definition
                     String allDefinition = "";
                     boolean found=false;
                     for (var entry : dictionary.entrySet()) {
@@ -144,6 +155,54 @@ public class Dict extends JPanel implements ItemListener {
         }
     }
 
+    public class showHistorySearch extends JPanel implements ActionListener{
+        JTextArea displayHistory;
+            public showHistorySearch(){
+                setLayout(new BorderLayout());
+                displayHistory = new JTextArea(10,10);
+                JButton refresh = new JButton("Refresh");
+                refresh.setActionCommand("refresh");
+                refresh.addActionListener(this);
+                JButton clear =new JButton("Clear");
+                clear.setActionCommand("clear");
+                clear.addActionListener(this);
+                add(displayHistory, BorderLayout.CENTER);
+
+                JPanel coverFooter = new JPanel();
+                coverFooter.setLayout(new BoxLayout(coverFooter,BoxLayout.PAGE_AXIS));
+
+                JPanel footer = new JPanel();
+                footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
+
+                footer.add(refresh);
+                footer.add(Box.createRigidArea(new Dimension(20,0)));
+                footer.add(clear);
+                footer.setAlignmentX(Component.CENTER_ALIGNMENT);
+                coverFooter.add(footer);
+
+                add(coverFooter,BorderLayout.PAGE_END);
+            }
+        public void actionPerformed(ActionEvent e) {
+                String cmd = e.getActionCommand();
+            if(cmd.equals("refresh")) {
+                displayHistory.setText("");
+                for (int i = 0; i < history.size(); i++) {
+                    displayHistory.append(history.get(i) + "\n");
+                }
+                JScrollPane scrollPane = new JScrollPane();
+                scrollPane.setViewportView(displayHistory);
+                add(scrollPane);
+            }
+            if(cmd.equals("clear")) {
+                displayHistory.setText("");
+                history.clear();
+            }
+
+
+        }
+
+    }
+
     public Dict(){
         setLayout(new BorderLayout());
         JPanel topPanel = new JPanel();
@@ -163,16 +222,13 @@ public class Dict extends JPanel implements ItemListener {
         //search by definition
         searchDefinition choice2 = new searchDefinition();
 
-        String[] data3 = {"g","h","i","j"};
-        JList list3 = new JList();
-        list3.setListData(data3);
-        JPanel card3 = new JPanel();
-        card3.add(list3);
+        //see search history
+        showHistorySearch choice3 = new showHistorySearch();
 
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
         cards.add(choice2,choiceList[1]);
-        cards.add(card3,choiceList[2]);
+        cards.add(choice3,choiceList[2]);
 
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
@@ -210,7 +266,7 @@ public class Dict extends JPanel implements ItemListener {
 
 
     public static void main(String[] args){
-
+        int count = 0;
         try {
             BufferedReader br = new BufferedReader(new FileReader("slang.txt"));
             String line = br.readLine();
@@ -232,9 +288,22 @@ public class Dict extends JPanel implements ItemListener {
                 }else {
                     line = br.readLine();
                 }
+
             }
             br.close();
         } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("history.txt"));
+            String line = br.readLine();
+            while (line!=null){
+                history.add(line);
+                line = br.readLine();
+            }
+            br.close();
+        }catch (Exception ex){
             System.out.println(ex.getMessage());
         }
         System.out.println(dictionary.size());
