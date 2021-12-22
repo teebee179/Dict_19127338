@@ -5,8 +5,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
-import java.util.HashMap;
+import java.io.FileWriter;
+import java.util.*;
+import java.util.List;
 
 /**
  * PACKAGE_NAME
@@ -16,9 +19,23 @@ import java.util.HashMap;
  */
 
 public class Dict extends JPanel implements ItemListener {
-    static HashMap<String,String> dictionary = new HashMap<String, String>();
-
+    static HashMap<String, ArrayList<String> > dictionary = new HashMap<String, ArrayList<String>>();
+    List<String> history;
     JPanel cards;
+
+    public void addToHistory(String word){
+        try {
+            FileWriter fw = new FileWriter("data.txt", true);
+            BufferedWriter fWrite = new BufferedWriter(fw);
+            String test = "";
+            byte[] b = test.getBytes();
+            fWrite.write(test);
+            fWrite.flush();
+            fWrite.close();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
 
     public  class searchWord extends  JPanel{
         public  searchWord(){
@@ -52,7 +69,11 @@ public class Dict extends JPanel implements ItemListener {
                     result.setText("");
                     String word = inputWord.getText();
                     if(dictionary.get(word)!=null){
-                        result.setText(dictionary.get(word));
+                        String def = "";
+                        for (int i = 0; i < dictionary.get(word).size(); i++) {
+                            def += dictionary.get(word).get(i) + ",";
+                        }
+                        result.setText(def);
 
                     }else {
                         result.setText("Word does not exist !!!");
@@ -79,9 +100,9 @@ public class Dict extends JPanel implements ItemListener {
             constraints.gridy = 0;
             add(searchWord,constraints);
             //search text field
-            JTextField inputWord = new JTextField(15);
+            JTextField inputDef = new JTextField(15);
             constraints.gridx = 1;
-            add(inputWord,constraints);
+            add(inputDef,constraints);
             //Definition label
             JLabel definition = new JLabel("Word: ");
             constraints.gridx = 0;
@@ -97,12 +118,21 @@ public class Dict extends JPanel implements ItemListener {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     result.setText("");
-                    String def = inputWord.getText();
-                    if(dictionary.get(def)!=null){
-                        result.setText(dictionary.get(def));
-
-                    }else {
+                    String def = inputDef.getText();
+                    String allDefinition = "";
+                    boolean found=false;
+                    for (var entry : dictionary.entrySet()) {
+                        for (int i = 0; i < entry.getValue().size(); i++) {
+                            if(entry.getValue().get(i).equals(def)){
+                                found = true;
+                                allDefinition += entry.getKey().toString() + ", ";
+                            }
+                        }
+                    }
+                    result.setText(allDefinition);
+                    if(found==false){
                         result.setText("Definition incorrect  !!!");
+
                     }
                     constraints.gridx = 1;
                     constraints.gridy = 1;
@@ -131,11 +161,7 @@ public class Dict extends JPanel implements ItemListener {
 
 
         //search by definition
-        String[] data2 = {"d","e","f"};
-        JList list2 = new JList();
-        list2.setListData(data2);
-        JPanel card2 = new JPanel();
-        card2.add(list2);
+        searchDefinition choice2 = new searchDefinition();
 
         String[] data3 = {"g","h","i","j"};
         JList list3 = new JList();
@@ -145,7 +171,7 @@ public class Dict extends JPanel implements ItemListener {
 
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
-        cards.add(card2,choiceList[1]);
+        cards.add(choice2,choiceList[1]);
         cards.add(card3,choiceList[2]);
 
         JPanel footer = new JPanel();
@@ -191,8 +217,17 @@ public class Dict extends JPanel implements ItemListener {
             while (line != null) {
                 if(line.contains("`")){
                     String[] word = line.split("`");
-                    System.out.println(word[0] + "," + word[1]);
-                    dictionary.put(word[0],word[1]);
+                    ArrayList<String> means = new ArrayList<>();
+                    dictionary.put(word[0],means);
+                    if(word[1].contains("|")){
+                        String[] meanings = word[1].split("[|]");
+                        for (int i = 0; i < meanings.length; i++) {
+                            dictionary.get(word[0]).add(meanings[i]);
+                        }
+                    }
+                    else{
+                        dictionary.get(word[0]).add(word[1]);
+                    }
                     line = br.readLine();
                 }else {
                     line = br.readLine();
