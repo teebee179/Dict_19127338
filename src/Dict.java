@@ -278,6 +278,98 @@ public class Dict extends JPanel implements ItemListener{
         }
     }
 
+    public class editSlangWord extends JPanel{
+        public editSlangWord(){
+            setLayout(new FlowLayout());
+            JPanel inputField = new JPanel();
+            inputField.setLayout(new GridBagLayout());
+            GridBagConstraints constraints = new GridBagConstraints();
+            //add word label
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 0; constraints.gridy = 0;
+            JLabel addWord = new JLabel("Input your word: ");
+            inputField.add(addWord,constraints);
+
+            //add definition label
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 0; constraints.gridy = 1;
+            JLabel addDef = new JLabel("Input word definition: ");
+            inputField.add(addDef,constraints);
+
+            //input word field
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 0;
+            JTextField addWordField = new JTextField(20);
+            inputField.add(addWordField,constraints);
+
+            //input definition field
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 1;
+            JTextField addDefField = new JTextField(30);
+            inputField.add(addDefField,constraints);
+
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 2;
+            JButton editBtn = new JButton("Edit");
+            editBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+
+                }
+            });
+        }
+    }
+
+    public class deleteSlangWord extends JPanel{
+        public deleteSlangWord(){
+            setLayout(new FlowLayout());
+            JPanel inputField = new JPanel();
+            inputField.setLayout(new GridBagLayout());
+            GridBagConstraints constraints = new GridBagConstraints();
+            //input word label
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 0; constraints.gridy = 0;
+            JLabel deleteWord = new JLabel("Input your word: ");
+            inputField.add(deleteWord,constraints);
+
+            //input word field
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 0;
+            JTextField deleteWordField = new JTextField(20);
+            inputField.add(deleteWordField,constraints);
+
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 2;
+            JButton deleteBtn = new JButton("Delete");
+            deleteBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String word = deleteWordField.getText();
+                    if(dictionary.get(word) == null){
+                        JOptionPane.showMessageDialog(new JFrame(), "Word not exist", "Delete slang word", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else {
+                        int n = JOptionPane.showConfirmDialog(
+                                new JFrame(),
+                                "Do you really want to delete this word ?",
+                                "Delete slang word",
+                                JOptionPane.YES_NO_OPTION);
+                        if(n == JOptionPane.YES_OPTION){
+                            dictionary.remove(word);
+                            JOptionPane.showMessageDialog(new JFrame(), "Delete successfully", "Delete slang word", JOptionPane.INFORMATION_MESSAGE);
+
+                        }
+                        else if(n != JOptionPane.NO_OPTION){
+                            deleteWordField.setText("");
+                        }
+                    }
+                }
+            });
+            inputField.add(deleteBtn,constraints);
+            add(inputField);
+        }
+    }
+
     public Dict(){
         setLayout(new BorderLayout());
         JPanel topPanel = new JPanel();
@@ -302,11 +394,15 @@ public class Dict extends JPanel implements ItemListener{
         //add slang word
         addSlangWord choice4 = new addSlangWord();
 
+        //delete slang word
+        deleteSlangWord choice6 = new deleteSlangWord();
+
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
         cards.add(choice2,choiceList[1]);
         cards.add(choice3,choiceList[2]);
         cards.add(choice4,choiceList[3]);
+        cards.add(choice6,choiceList[5]);
 
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
