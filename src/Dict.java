@@ -203,6 +203,81 @@ public class Dict extends JPanel implements ItemListener{
 
     }
 
+    public class addSlangWord extends JPanel{
+        public addSlangWord(){
+            setLayout(new FlowLayout());
+            JPanel inputField = new JPanel();
+            inputField.setLayout(new GridBagLayout());
+            GridBagConstraints constraints = new GridBagConstraints();
+            //add word label
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 0; constraints.gridy = 0;
+            JLabel addWord = new JLabel("Input your word: ");
+            inputField.add(addWord,constraints);
+
+            //add definition label
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 0; constraints.gridy = 1;
+            JLabel addDef = new JLabel("Input word definition: ");
+            inputField.add(addDef,constraints);
+
+            //input word field
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 0;
+            JTextField addWordField = new JTextField(20);
+            inputField.add(addWordField,constraints);
+
+            //input definition field
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 1;
+            JTextField addDefField = new JTextField(30);
+            inputField.add(addDefField,constraints);
+
+            constraints.anchor = GridBagConstraints.WEST;
+            constraints.gridx = 1; constraints.gridy = 2;
+            JButton addBtn = new JButton("Add");
+            addBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String word = addWordField.getText();
+                    String definition = addDefField.getText();
+                    ArrayList<String> defList = new ArrayList<>();
+                    defList.add(definition);
+                    if(dictionary.get(word)==null){
+                        dictionary.put(word, defList);
+                        JOptionPane.showMessageDialog(new JFrame(), "Add successfully", "Add slang word", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    else{
+                        Object[] options = {"Duplicate", "Rewrite"};
+                        int n = JOptionPane.showOptionDialog(new JFrame(),
+                                "The word u want to add is already exist,  Do you want to duplicate it or rewrite ?",
+                                "Add word",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.QUESTION_MESSAGE,
+                                null,     //do not use a custom Icon
+                                options,  //the titles of buttons
+                                options[0]); //default button title
+                        //if user choice is duplicate. add to list of definition
+                        if(n == JOptionPane.YES_OPTION){
+                            dictionary.get(word).add(definition);
+                            JOptionPane.showMessageDialog(new JFrame(), "Duplicate successfully", "Add slang word", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                        //if user choice is rewrite, clear definition list and add new definition
+                        if(n == JOptionPane.NO_OPTION){
+                            dictionary.get(word).clear();
+                            dictionary.get(word).add(definition);
+                            JOptionPane.showMessageDialog(new JFrame(), "Rewrite successfully", "Add slang word", JOptionPane.INFORMATION_MESSAGE);
+
+                        }
+                    }
+                }
+            });
+            inputField.add(addBtn,constraints);
+
+            add(inputField);
+        }
+    }
+
     public Dict(){
         setLayout(new BorderLayout());
         JPanel topPanel = new JPanel();
@@ -218,17 +293,20 @@ public class Dict extends JPanel implements ItemListener{
         //search by word
         searchWord choice1 = new searchWord();
 
-
         //search by definition
         searchDefinition choice2 = new searchDefinition();
 
         //see search history
         showHistorySearch choice3 = new showHistorySearch();
 
+        //add slang word
+        addSlangWord choice4 = new addSlangWord();
+
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
         cards.add(choice2,choiceList[1]);
         cards.add(choice3,choiceList[2]);
+        cards.add(choice4,choiceList[3]);
 
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
