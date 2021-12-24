@@ -324,9 +324,20 @@ public class Dict extends JPanel implements ItemListener{
             editBtn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    String word = addWordField.getText();
+                    if(dictionary.get(word) == null){
+                        JOptionPane.showMessageDialog(new JFrame(), "Word not exist", "Edit slang word", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else{
+                        dictionary.get(word).clear();
+                        dictionary.get(word).add(addDefField.getText());
+                        JOptionPane.showMessageDialog(new JFrame(), "Edit successfully", "Edit slang word", JOptionPane.INFORMATION_MESSAGE);
 
+                    }
                 }
             });
+            inputField.add(editBtn,constraints);
+            add(inputField);
         }
     }
 
@@ -454,6 +465,9 @@ public class Dict extends JPanel implements ItemListener{
         //add slang word
         addSlangWord choice4 = new addSlangWord();
 
+        //edit slang word
+        editSlangWord choice5 = new editSlangWord();
+
         //delete slang word
         deleteSlangWord choice6 = new deleteSlangWord();
 
@@ -465,6 +479,7 @@ public class Dict extends JPanel implements ItemListener{
         cards.add(choice2,choiceList[1]);
         cards.add(choice3,choiceList[2]);
         cards.add(choice4,choiceList[3]);
+        cards.add(choice5,choiceList[4]);
         cards.add(choice6,choiceList[5]);
         cards.add(choice8,choiceList[7]);
 
