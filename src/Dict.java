@@ -4,10 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 
@@ -24,7 +21,6 @@ public class Dict extends JPanel implements ItemListener{
     JPanel cards;
     static List<String> history = new ArrayList<>();
     
-    
     public void addToHistory(String word){
         if(word != "") {
             history.add(0, word);
@@ -40,6 +36,13 @@ public class Dict extends JPanel implements ItemListener{
                 System.out.println(ex.getMessage());
             }
         }
+    }
+
+    public String randomAWord(){
+        Random generator = new Random();
+        String[] keyList = dictionary.keySet().toArray(new String[0]);
+        String randomWord = keyList[generator.nextInt(keyList.length)];
+        return randomWord;
     }
 
     public  class searchWord extends  JPanel{
@@ -160,13 +163,15 @@ public class Dict extends JPanel implements ItemListener{
             public showHistorySearch(){
                 setLayout(new BorderLayout());
                 displayHistory = new JTextArea(10,10);
+                JScrollPane scrollPane = new JScrollPane(displayHistory, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                add(scrollPane, BorderLayout.CENTER);
+
                 JButton refresh = new JButton("Refresh");
                 refresh.setActionCommand("refresh");
                 refresh.addActionListener(this);
                 JButton clear =new JButton("Clear");
                 clear.setActionCommand("clear");
                 clear.addActionListener(this);
-                add(displayHistory, BorderLayout.CENTER);
 
                 JPanel coverFooter = new JPanel();
                 coverFooter.setLayout(new BoxLayout(coverFooter,BoxLayout.PAGE_AXIS));
@@ -189,13 +194,18 @@ public class Dict extends JPanel implements ItemListener{
                 for (int i = 0; i < history.size(); i++) {
                     displayHistory.append(history.get(i) + "\n");
                 }
-                JScrollPane scrollPane = new JScrollPane();
-                scrollPane.setViewportView(displayHistory);
-                add(scrollPane);
             }
             if(cmd.equals("clear")) {
                 displayHistory.setText("");
                 history.clear();
+                try {
+                    PrintWriter writer = new PrintWriter("history.txt");
+                    writer.print("");
+                    writer.close();
+                }
+                catch (Exception ex){
+                    System.out.println(ex.getMessage());
+                }
             }
 
 
@@ -370,6 +380,56 @@ public class Dict extends JPanel implements ItemListener{
         }
     }
 
+    public class randomSlangWord extends JPanel implements ActionListener{
+        List<String> randomList = new ArrayList<>();
+        JTextArea displayRandomWord;
+        public randomSlangWord(){
+            setLayout(new BorderLayout());
+            displayRandomWord = new JTextArea(10,10);
+            JScrollPane scrollPane = new JScrollPane(displayRandomWord, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+            JButton random = new JButton("Random");
+            random.setActionCommand("random");
+            random.addActionListener(this);
+            JButton clear =new JButton("Clear");
+            clear.setActionCommand("clear");
+            clear.addActionListener(this);
+
+            add(scrollPane, BorderLayout.CENTER);
+            //add(displayRandomWord, BorderLayout.CENTER);
+
+            JPanel coverFooter = new JPanel();
+            coverFooter.setLayout(new BoxLayout(coverFooter,BoxLayout.PAGE_AXIS));
+
+            JPanel footer = new JPanel();
+            footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
+
+            footer.add(random);
+            footer.add(Box.createRigidArea(new Dimension(20,0)));
+            footer.add(clear);
+            footer.setAlignmentX(Component.CENTER_ALIGNMENT);
+            coverFooter.add(footer);
+
+            add(coverFooter,BorderLayout.PAGE_END);
+        }
+
+        public void actionPerformed(ActionEvent e){
+            String cmd =e.getActionCommand();
+            if(cmd.equals("random")){
+                String word = randomAWord();
+                String definition = "";
+                for (int i = 0; i < dictionary.get(word).size(); i++) {
+                    definition += dictionary.get(word).get(i) + ", ";
+                }
+                displayRandomWord.append(word + " - " + definition + "\n");
+
+            }
+            if(cmd.equals("clear")){
+                displayRandomWord.setText("");
+            }
+        }
+    }
+
     public Dict(){
         setLayout(new BorderLayout());
         JPanel topPanel = new JPanel();
@@ -397,12 +457,16 @@ public class Dict extends JPanel implements ItemListener{
         //delete slang word
         deleteSlangWord choice6 = new deleteSlangWord();
 
+        //random slang word
+        randomSlangWord choice8 = new randomSlangWord();
+
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
         cards.add(choice2,choiceList[1]);
         cards.add(choice3,choiceList[2]);
         cards.add(choice4,choiceList[3]);
         cards.add(choice6,choiceList[5]);
+        cards.add(choice8,choiceList[7]);
 
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
@@ -482,6 +546,7 @@ public class Dict extends JPanel implements ItemListener{
         }
         System.out.println(dictionary.size());
         createAndShowGUI();
+
     }
 }
 
