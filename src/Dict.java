@@ -15,38 +15,56 @@ import java.util.List;
  * Description: ...
  */
 
+
 public class Dict extends JPanel implements ItemListener{
     //dictionary using hashmap with key is a string and value is arraylist for store multiple definition
     static HashMap<String, ArrayList<String> > dictionary = new HashMap<String, ArrayList<String>>();
     JPanel cards;
     static List<String> history = new ArrayList<>();
-    
     public void addToHistory(String word){
         if(word != "") {
-            history.add(0, word);
-            try {
-                FileWriter fw = new FileWriter("history.txt", true);
-                BufferedWriter fWrite = new BufferedWriter(fw);
-                for (int i = 0; i < history.size(); i++) {
-                    fWrite.write(history.get(i) + "\n");
+                history.add(0, word);
+                try {
+                    FileWriter fw = new FileWriter("history.txt", true);
+                    BufferedWriter fWrite = new BufferedWriter(fw);
+                    for (int i = 0; i < history.size(); i++) {
+                        fWrite.write(history.get(i) + "\n");
+                    }
+                    fWrite.flush();
+                    fWrite.close();
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
                 }
-                fWrite.flush();
-                fWrite.close();
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
             }
-        }
     }
 
+    public String[] generateQuiz(String word){
+        String[] quizCase = new String[4];
+        quizCase[0] = dictionary.get(word).toString();
+        for (int i = 1; i < 4; i++) {
+            quizCase[i] = dictionary.get(randomAWord()).toString();
+        }
+        return quizCase;
+    }
+
+    //random a word
     public String randomAWord(){
         Random generator = new Random();
         String[] keyList = dictionary.keySet().toArray(new String[0]);
         String randomWord = keyList[generator.nextInt(keyList.length)];
         return randomWord;
     }
+    //random a definition
+    public String randomDefinition(){
+        String word = randomAWord();
+        List<String> definition = dictionary.get(word);
+        return definition.toString();
+    }
+
 
     public  class searchWord extends  JPanel{
         public  searchWord(){
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             JPanel card1 = new JPanel();
             card1.setLayout(new GridBagLayout());
             GridBagConstraints c1 = new GridBagConstraints();
@@ -71,13 +89,25 @@ public class Dict extends JPanel implements ItemListener{
             c1.gridy = 0;
             JLabel result = new JLabel();
             result.setVisible(false);
+
+            //historyLog
+            JTextArea historyLog = new JTextArea(10, 10);
+            historyLog.setText("");
+            for (int i = 0; i < history.size(); i++) {
+                historyLog.append(history.get(i) + "\n");
+            }
+            JScrollPane scrollPane = new JScrollPane(historyLog, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
             search.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     result.setText("");
                     String word = inputWord.getText();
-                    //add word to history search
-                    addToHistory(word);
+                    //add word to history search and historyLog
+                    if(word != "") {
+                        addToHistory(word);
+                        historyLog.append(word + "\n");
+                    }
                     //search for word
                     if(dictionary.get(word)!=null){
                         String def = "";
@@ -93,10 +123,17 @@ public class Dict extends JPanel implements ItemListener{
                     c1.gridy = 1;
                     card1.add(result,c1);
                     result.setVisible(true);
+
+
+
                 }
             });
             card1.add(search,c1);
             add(card1);
+            add(Box.createRigidArea(new Dimension(10,10)));
+            add(Box.createRigidArea(new Dimension(10,10)), BoxLayout.X_AXIS);
+            add(scrollPane);
+
         }
     }
 
@@ -161,6 +198,9 @@ public class Dict extends JPanel implements ItemListener{
     public class showHistorySearch extends JPanel implements ActionListener{
         JTextArea displayHistory;
             public showHistorySearch(){
+                JLabel label = new JLabel("Recently search");
+                add(label, BorderLayout.WEST);
+
                 setLayout(new BorderLayout());
                 displayHistory = new JTextArea(10,10);
                 JScrollPane scrollPane = new JScrollPane(displayHistory, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -189,6 +229,7 @@ public class Dict extends JPanel implements ItemListener{
             }
         public void actionPerformed(ActionEvent e) {
                 String cmd = e.getActionCommand();
+
             if(cmd.equals("refresh")) {
                 displayHistory.setText("");
                 for (int i = 0; i < history.size(); i++) {
@@ -391,6 +432,80 @@ public class Dict extends JPanel implements ItemListener{
         }
     }
 
+    public class quizUsingWord extends JPanel implements ActionListener{
+        int i;
+        String word;
+        String answer;
+        List<JButton> btnList = new ArrayList<JButton>();
+        JPanel answerPanel;
+        JLabel slangWord;
+        public void actionPerformed(ActionEvent e){
+            answer = e.getActionCommand();
+            System.out.println(dictionary.get(word).toString());
+            System.out.println(e.getActionCommand());
+            for (int j = 0; j < 4; j++) {
+                if(btnList.get(j).getText().equals(word)){
+                    btnList.get(j).setBackground(Color.GREEN);
+                }
+            }
+            if(dictionary.get(word).toString().equals(answer)){
+                Object[] options = {"Play again", "Finish"};
+                int n = JOptionPane.showOptionDialog(new JFrame(),
+                        "Correct answer. Do you want to play again or quit",
+                        "Quiz",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,     //do not use a custom Icon
+                        options,  //the titles of buttons
+                        options[0]); //default button title
+                //play again
+                if(n == JOptionPane.YES_OPTION){
+                    word = randomAWord();
+                    slangWord.setText(word);
+                    btnList.get(0).setText(dictionary.get(word).toString());
+                    btnList.get(1).setText(randomDefinition());
+                    btnList.get(2).setText(randomDefinition());
+                    btnList.get(3).setText(randomDefinition());
+                    Collections.shuffle(btnList);
+                    for (int j = 0; j < 4; j++) {
+                        btnList.get(j).setActionCommand(btnList.get(j).getText().toString());
+                    }
+                }
+                //if finish do nothing
+            }
+        }
+
+        public quizUsingWord(){
+            answerPanel = new JPanel();
+            //quiz case
+            word = randomAWord();
+            answer = "";
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            slangWord = new JLabel(word);
+            slangWord.setFont(new Font("Calibri", Font.BOLD, 25));
+            add(slangWord);
+
+
+            btnList.add(new JButton(dictionary.get(word).toString()));
+            btnList.add(new JButton(randomDefinition()));
+            btnList.add(new JButton(randomDefinition()));
+            btnList.add(new JButton(randomDefinition()));
+            Collections.shuffle(btnList);
+
+            for (i = 0; i < 4; i++) {
+                btnList.get(i).setActionCommand(btnList.get(i).getText().toString());
+                btnList.get(i).addActionListener(this);
+            }
+
+
+            for (int j = 0; j < 4; j++) {
+                answerPanel.add(btnList.get(j));
+            }
+            answerPanel.setLayout(new GridLayout(2,2));
+            add(answerPanel);
+        }
+    }
+
     public class randomSlangWord extends JPanel implements ActionListener{
         List<String> randomList = new ArrayList<>();
         JTextArea displayRandomWord;
@@ -474,6 +589,9 @@ public class Dict extends JPanel implements ItemListener{
         //random slang word
         randomSlangWord choice8 = new randomSlangWord();
 
+        //quiz using word
+        quizUsingWord choice9 = new quizUsingWord();
+
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
         cards.add(choice2,choiceList[1]);
@@ -482,6 +600,7 @@ public class Dict extends JPanel implements ItemListener{
         cards.add(choice5,choiceList[4]);
         cards.add(choice6,choiceList[5]);
         cards.add(choice8,choiceList[7]);
+        cards.add(choice9, choiceList[8]);
 
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
@@ -497,6 +616,8 @@ public class Dict extends JPanel implements ItemListener{
         add(topPanel, BorderLayout.PAGE_START);
         add(cards, BorderLayout.CENTER);
         add(footer, BorderLayout.PAGE_END);
+
+
     }
 
     public void itemStateChanged(ItemEvent evt)
@@ -531,7 +652,7 @@ public class Dict extends JPanel implements ItemListener{
                     if(word[1].contains("|")){
                         String[] meanings = word[1].split("[|]");
                         for (int i = 0; i < meanings.length; i++) {
-                            dictionary.get(word[0]).add(meanings[i]);
+                            dictionary.get(word[0]).add(meanings[i].trim());
                         }
                     }
                     else{
