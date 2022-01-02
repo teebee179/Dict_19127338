@@ -27,9 +27,7 @@ public class Dict extends JPanel implements ItemListener{
                 try {
                     FileWriter fw = new FileWriter("history.txt", true);
                     BufferedWriter fWrite = new BufferedWriter(fw);
-                    for (int i = 0; i < history.size(); i++) {
-                        fWrite.write(history.get(i) + "\n");
-                    }
+                    fWrite.write(word + "\n");
                     fWrite.flush();
                     fWrite.close();
                 } catch (Exception ex) {
@@ -64,7 +62,7 @@ public class Dict extends JPanel implements ItemListener{
 
     public  class searchWord extends  JPanel{
         public  searchWord(){
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
             JPanel card1 = new JPanel();
             card1.setLayout(new GridBagLayout());
             GridBagConstraints c1 = new GridBagConstraints();
@@ -83,31 +81,50 @@ public class Dict extends JPanel implements ItemListener{
             c1.gridx = 0;
             c1.gridy = 1;
             card1.add(definition,c1);
+            //history log
+            JPanel historyLog = new JPanel();
+            historyLog.setLayout(new BorderLayout());
+            JLabel label = new JLabel("Recently search");
+            historyLog.add(label, BorderLayout.PAGE_START);
+            JTextArea displayHistory = new JTextArea(10,10);
+            JScrollPane scrollPane = new JScrollPane(displayHistory, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            for (int i = 0; i < history.size(); i++) {
+                displayHistory.append(history.get(i) + "\n");
+            }
+            historyLog.add(scrollPane, BorderLayout.CENTER);
+            JButton clearBtn = new JButton("Clear");
+            clearBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    displayHistory.setText("");
+                    history.clear();
+                    try {
+                        PrintWriter writer = new PrintWriter("history.txt");
+                        writer.print("");
+                        writer.close();
+                    }
+                    catch (Exception ex){
+                        System.out.println(ex.getMessage());
+                    }
+                }
+            });
+            historyLog.add(clearBtn, BorderLayout.PAGE_END);
+
             //search button
             JButton search = new JButton("Search");
             c1.gridx = 2;
             c1.gridy = 0;
             JLabel result = new JLabel();
             result.setVisible(false);
-
-            //historyLog
-            JTextArea historyLog = new JTextArea(10, 10);
-            historyLog.setText("");
-            for (int i = 0; i < history.size(); i++) {
-                historyLog.append(history.get(i) + "\n");
-            }
-            JScrollPane scrollPane = new JScrollPane(historyLog, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
             search.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     result.setText("");
                     String word = inputWord.getText();
-                    //add word to history search and historyLog
-                    if(word != "") {
-                        addToHistory(word);
-                        historyLog.append(word + "\n");
-                    }
+                    //update history log
+                    if(word!="") displayHistory.append(word + "\n");
+                    //write to file for next time
+                    addToHistory(word);
                     //search for word
                     if(dictionary.get(word)!=null){
                         String def = "";
@@ -128,11 +145,13 @@ public class Dict extends JPanel implements ItemListener{
 
                 }
             });
+
+            showHistorySearch historySearch = new showHistorySearch();
+
+
             card1.add(search,c1);
             add(card1);
-            add(Box.createRigidArea(new Dimension(10,10)));
-            add(Box.createRigidArea(new Dimension(10,10)), BoxLayout.X_AXIS);
-            add(scrollPane);
+            add(historyLog, BorderLayout.EAST);
 
         }
     }
@@ -199,7 +218,7 @@ public class Dict extends JPanel implements ItemListener{
         JTextArea displayHistory;
             public showHistorySearch(){
                 JLabel label = new JLabel("Recently search");
-                add(label, BorderLayout.WEST);
+                add(label);
 
                 setLayout(new BorderLayout());
                 displayHistory = new JTextArea(10,10);
@@ -443,8 +462,14 @@ public class Dict extends JPanel implements ItemListener{
             answer = e.getActionCommand();
             System.out.println(dictionary.get(word).toString());
             System.out.println(e.getActionCommand());
+            Object[] options = {"Play again", "Finish"};
             if(dictionary.get(word).toString().equals(answer)){
-                Object[] options = {"Play again", "Finish"};
+                //find the chosen button and hightlight it green
+                for (int j = 0; j < 4; j++) {
+                    if(btnList.get(j).getText().equals(e.getActionCommand())){
+                        btnList.get(j).setBackground(Color.GREEN);
+                    }
+                }
                 int n = JOptionPane.showOptionDialog(new JFrame(),
                         "Correct answer !!!. Do you want to play again or quit",
                         "Quiz",
@@ -458,9 +483,13 @@ public class Dict extends JPanel implements ItemListener{
                     word = randomAWord();
                     slangWord.setText(word);
                     btnList.get(0).setText(dictionary.get(word).toString());
+                    btnList.get(0).setBackground(null);
                     btnList.get(1).setText(randomDefinition());
+                    btnList.get(1).setBackground(null);
                     btnList.get(2).setText(randomDefinition());
+                    btnList.get(2).setBackground(null);
                     btnList.get(3).setText(randomDefinition());
+                    btnList.get(3).setBackground(null);
                     Collections.shuffle(btnList);
                     for (int j = 0; j < 4; j++) {
                         btnList.get(j).setActionCommand(btnList.get(j).getText().toString());
@@ -468,9 +497,50 @@ public class Dict extends JPanel implements ItemListener{
                 }
                 //if finish do nothing
             }
+            //incorrect answer
+            else {
+                //find the correct button and hightlight it green
+                for (int j = 0; j < 4; j++) {
+                    if(btnList.get(j).getText().equals(dictionary.get(word).toString())){
+                        btnList.get(j).setBackground(Color.GREEN);
+                    }
+                }
+                //find the chosen button and hightlight it red
+                for (int j = 0; j < 4; j++) {
+                    if(btnList.get(j).getText().equals(e.getActionCommand())){
+                        btnList.get(j).setBackground(Color.RED);
+                    }
+                }
+                int n = JOptionPane.showOptionDialog(new JFrame(),
+                        "Incorrect answer :((((. Do you want to play again or quit",
+                        "Quiz",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.ERROR_MESSAGE,
+                        null,     //do not use a custom Icon
+                        options,  //the titles of buttons
+                        options[0]); //default button title
+                //play again
+                if(n == JOptionPane.YES_OPTION){
+                    word = randomAWord();
+                    slangWord.setText(word);
+                    btnList.get(0).setText(dictionary.get(word).toString());
+                    btnList.get(0).setBackground(null);
+                    btnList.get(1).setText(randomDefinition());
+                    btnList.get(1).setBackground(null);
+                    btnList.get(2).setText(randomDefinition());
+                    btnList.get(2).setBackground(null);
+                    btnList.get(3).setText(randomDefinition());
+                    btnList.get(3).setBackground(null);
+                    Collections.shuffle(btnList);
+                    for (int j = 0; j < 4; j++) {
+                        btnList.get(j).setActionCommand(btnList.get(j).getText().toString());
+                    }
+                }
+            }
         }
 
         public quizUsingWord(){
+            setSize(500,500);
             answerPanel = new JPanel();
             //quiz case
             word = randomAWord();
@@ -510,8 +580,14 @@ public class Dict extends JPanel implements ItemListener{
 
         public void actionPerformed(ActionEvent e){
             String word = e.getActionCommand();
+            Object[] options = {"Play again", "Finish"};
             if(dictionary.get(word).toString().equals(definition)) {
-                Object[] options = {"Play again", "Finish"};
+                //if answer is correct, find the correct button and highlight it
+                for (int j = 0; j < 4; j++) {
+                    if(btnList.get(j).getText().equals(e.getActionCommand())){
+                        btnList.get(j).setBackground(Color.GREEN);
+                    }
+                }
                 int n = JOptionPane.showOptionDialog(new JFrame(),
                         "Correct answer !!!. Do you want to play again or quit",
                         "Quiz",
@@ -526,15 +602,60 @@ public class Dict extends JPanel implements ItemListener{
                     definition = dictionary.get(answerWord).toString();
                     definitionLabel.setText(definition);
                     btnList.get(0).setText(answerWord);
+                    btnList.get(0).setBackground(null);
                     btnList.get(1).setText(randomAWord());
+                    btnList.get(1).setBackground(null);
                     btnList.get(2).setText(randomAWord());
+                    btnList.get(2).setBackground(null);
                     btnList.get(3).setText(randomAWord());
+                    btnList.get(3).setBackground(null);
                     Collections.shuffle(btnList);
                     for (int j = 0; j < 4; j++) {
                         btnList.get(j).setActionCommand(btnList.get(j).getText().toString());
                     }
                 }
                 //if finish do nothing
+            }
+            //incorrect answer
+            else {
+                //find the correct button and hightlight it green
+                for (int j = 0; j < 4; j++) {
+                    if(btnList.get(j).getText().equals(answerWord)){
+                        btnList.get(j).setBackground(Color.GREEN);
+                    }
+                }
+                //find the chosen button and hightlight it red
+                for (int j = 0; j < 4; j++) {
+                    if(btnList.get(j).getText().equals(e.getActionCommand())){
+                        btnList.get(j).setBackground(Color.RED);
+                    }
+                }
+                int n = JOptionPane.showOptionDialog(new JFrame(),
+                        "Incorrect answer :((((. Do you want to play again or quit",
+                        "Quiz",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.ERROR_MESSAGE,
+                        null,     //do not use a custom Icon
+                        options,  //the titles of buttons
+                        options[0]); //default button title
+                //play again
+                if(n == JOptionPane.YES_OPTION){
+                    answerWord = randomAWord();
+                    definition = dictionary.get(answerWord).toString();
+                    definitionLabel.setText(definition);
+                    btnList.get(0).setText(answerWord);
+                    btnList.get(0).setBackground(null);
+                    btnList.get(1).setText(randomAWord());
+                    btnList.get(1).setBackground(null);
+                    btnList.get(2).setText(randomAWord());
+                    btnList.get(2).setBackground(null);
+                    btnList.get(3).setText(randomAWord());
+                    btnList.get(3).setBackground(null);
+                    Collections.shuffle(btnList);
+                    for (int j = 0; j < 4; j++) {
+                        btnList.get(j).setActionCommand(btnList.get(j).getText().toString());
+                    }
+                }
             }
         }
 
@@ -737,7 +858,7 @@ public class Dict extends JPanel implements ItemListener{
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-
+        //load history search
         try {
             BufferedReader br = new BufferedReader(new FileReader("history.txt"));
             String line = br.readLine();
