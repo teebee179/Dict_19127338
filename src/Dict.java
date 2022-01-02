@@ -443,15 +443,10 @@ public class Dict extends JPanel implements ItemListener{
             answer = e.getActionCommand();
             System.out.println(dictionary.get(word).toString());
             System.out.println(e.getActionCommand());
-            for (int j = 0; j < 4; j++) {
-                if(btnList.get(j).getText().equals(word)){
-                    btnList.get(j).setBackground(Color.GREEN);
-                }
-            }
             if(dictionary.get(word).toString().equals(answer)){
                 Object[] options = {"Play again", "Finish"};
                 int n = JOptionPane.showOptionDialog(new JFrame(),
-                        "Correct answer. Do you want to play again or quit",
+                        "Correct answer !!!. Do you want to play again or quit",
                         "Quiz",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE,
@@ -494,6 +489,76 @@ public class Dict extends JPanel implements ItemListener{
 
             for (i = 0; i < 4; i++) {
                 btnList.get(i).setActionCommand(btnList.get(i).getText().toString());
+                btnList.get(i).addActionListener(this);
+            }
+
+
+            for (int j = 0; j < 4; j++) {
+                answerPanel.add(btnList.get(j));
+            }
+            answerPanel.setLayout(new GridLayout(2,2));
+            add(answerPanel);
+        }
+    }
+
+    public class quizUsingDefinition extends JPanel implements ActionListener{
+        String definition;
+        String answerWord;
+        List<JButton> btnList = new ArrayList<JButton>();
+        JPanel answerPanel;
+        JLabel definitionLabel;
+
+        public void actionPerformed(ActionEvent e){
+            String word = e.getActionCommand();
+            if(dictionary.get(word).toString().equals(definition)) {
+                Object[] options = {"Play again", "Finish"};
+                int n = JOptionPane.showOptionDialog(new JFrame(),
+                        "Correct answer !!!. Do you want to play again or quit",
+                        "Quiz",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,     //do not use a custom Icon
+                        options,  //the titles of buttons
+                        options[0]); //default button title
+                //play again
+                if (n == JOptionPane.YES_OPTION) {
+                    answerWord = randomAWord();
+                    definition = dictionary.get(answerWord).toString();
+                    definitionLabel.setText(definition);
+                    btnList.get(0).setText(answerWord);
+                    btnList.get(1).setText(randomAWord());
+                    btnList.get(2).setText(randomAWord());
+                    btnList.get(3).setText(randomAWord());
+                    Collections.shuffle(btnList);
+                    for (int j = 0; j < 4; j++) {
+                        btnList.get(j).setActionCommand(btnList.get(j).getText().toString());
+                    }
+                }
+                //if finish do nothing
+            }
+        }
+
+        public quizUsingDefinition(){
+            setSize(500,500);
+            answerPanel = new JPanel();
+            //quiz case
+            answerWord = randomAWord();
+            definition = dictionary.get(answerWord).toString();
+
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            definitionLabel = new JLabel(definition);
+            definitionLabel.setFont(new Font("Calibri", Font.BOLD, 25));
+            add(definitionLabel);
+
+
+            btnList.add(new JButton(answerWord));
+            btnList.add(new JButton(randomAWord()));
+            btnList.add(new JButton(randomAWord()));
+            btnList.add(new JButton(randomAWord()));
+            Collections.shuffle(btnList);
+
+            for (int i = 0; i < 4; i++) {
+                btnList.get(i).setActionCommand(btnList.get(i).getText());
                 btnList.get(i).addActionListener(this);
             }
 
@@ -592,6 +657,9 @@ public class Dict extends JPanel implements ItemListener{
         //quiz using word
         quizUsingWord choice9 = new quizUsingWord();
 
+        //quiz using definition
+        quizUsingDefinition choice10 = new quizUsingDefinition();
+
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
         cards.add(choice2,choiceList[1]);
@@ -601,6 +669,7 @@ public class Dict extends JPanel implements ItemListener{
         cards.add(choice6,choiceList[5]);
         cards.add(choice8,choiceList[7]);
         cards.add(choice9, choiceList[8]);
+        cards.add(choice10, choiceList[9]);
 
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
