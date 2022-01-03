@@ -59,6 +59,84 @@ public class Dict extends JPanel implements ItemListener{
         return definition.toString();
     }
 
+    public void handleFileChange(String word, String definition, int choice){
+        try {
+            FileWriter fw = new FileWriter("slang_changed.txt");
+            BufferedWriter fWrite = new BufferedWriter(fw);
+            String line = "";
+            //add word that not exist before
+            if(choice == 0){
+                for (var entry : dictionary.entrySet()) {
+                    line = "";
+                    line += entry.getKey() + "`";
+                    for (int i = 0; i < entry.getValue().size(); i++) {
+                        line += entry.getValue().get(i) + "|";
+                    }
+                    fWrite.write(line + "\n");
+                }
+                fWrite.write(word + "`" +definition + "\n");
+            }
+            //add word and duplicate it
+            if(choice == 1){
+                for (var entry : dictionary.entrySet()) {
+                    line = "";
+                    line += entry.getKey() + "`";
+                    for (int i = 0; i < entry.getValue().size(); i++) {
+                        line += entry.getValue().get(i) + "|";
+                    }
+                    if(entry.getKey().equals(word)){line += "|" + definition;}
+                    fWrite.write(line + "\n");
+                }
+            }
+            //add word and rewrite it
+            if(choice == 2){
+                for (var entry : dictionary.entrySet()) {
+                    line = "";
+                    line += entry.getKey() + "`";
+                    for (int i = 0; i < entry.getValue().size(); i++) {
+                        line += entry.getValue().get(i) + "|";
+                    }
+                    if(!entry.getKey().equals(word)){
+                        fWrite.write(line + "\n");
+                    }
+                }
+                fWrite.write(word + "`" + definition + "\n");
+            }
+            //edit slang word
+            if(choice == 3){
+                for (var entry : dictionary.entrySet()) {
+                    line = "";
+                    line += entry.getKey() + "`";
+                    for (int i = 0; i < entry.getValue().size(); i++) {
+                        line += entry.getValue().get(i) + "|";
+                    }
+                    if(!entry.getKey().equals(word)){
+                        fWrite.write(line + "\n");
+                    }
+                }
+                fWrite.write(word + "`" + definition + "\n");
+            }
+            //delete slang word
+            if(choice == 4){
+                for (var entry : dictionary.entrySet()) {
+                    line = "";
+                    line += entry.getKey() + "`";
+                    for (int i = 0; i < entry.getValue().size(); i++) {
+                        line += entry.getValue().get(i) + "|";
+                    }
+                    if(!entry.getKey().equals(word)){
+                        fWrite.write(line + "\n");
+                    }
+                }
+            }
+
+            fWrite.flush();
+            fWrite.close();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
 
     public  class searchWord extends  JPanel{
         public  searchWord(){
@@ -315,6 +393,7 @@ public class Dict extends JPanel implements ItemListener{
                     defList.add(definition);
                     if(dictionary.get(word)==null){
                         dictionary.put(word, defList);
+                        handleFileChange(word, definition, 0);
                         JOptionPane.showMessageDialog(new JFrame(), "Add successfully", "Add slang word", JOptionPane.INFORMATION_MESSAGE);
                     }
                     else{
@@ -331,13 +410,14 @@ public class Dict extends JPanel implements ItemListener{
                         if(n == JOptionPane.YES_OPTION){
                             dictionary.get(word).add(definition);
                             JOptionPane.showMessageDialog(new JFrame(), "Duplicate successfully", "Add slang word", JOptionPane.INFORMATION_MESSAGE);
+                            handleFileChange(word,definition,1);
                         }
                         //if user choice is rewrite, clear definition list and add new definition
                         if(n == JOptionPane.NO_OPTION){
                             dictionary.get(word).clear();
                             dictionary.get(word).add(definition);
+                            handleFileChange(word, definition, 2);
                             JOptionPane.showMessageDialog(new JFrame(), "Rewrite successfully", "Add slang word", JOptionPane.INFORMATION_MESSAGE);
-
                         }
                     }
                 }
@@ -391,6 +471,7 @@ public class Dict extends JPanel implements ItemListener{
                     else{
                         dictionary.get(word).clear();
                         dictionary.get(word).add(addDefField.getText());
+                        handleFileChange(word,addDefField.getText(), 3);
                         JOptionPane.showMessageDialog(new JFrame(), "Edit successfully", "Edit slang word", JOptionPane.INFORMATION_MESSAGE);
 
                     }
@@ -437,6 +518,7 @@ public class Dict extends JPanel implements ItemListener{
                                 JOptionPane.YES_NO_OPTION);
                         if(n == JOptionPane.YES_OPTION){
                             dictionary.remove(word);
+                            handleFileChange("","", 4);
                             JOptionPane.showMessageDialog(new JFrame(), "Delete successfully", "Delete slang word", JOptionPane.INFORMATION_MESSAGE);
 
                         }
@@ -832,7 +914,7 @@ public class Dict extends JPanel implements ItemListener{
     public static void main(String[] args){
         int count = 0;
         try {
-            BufferedReader br = new BufferedReader(new FileReader("slang.txt"));
+            BufferedReader br = new BufferedReader(new FileReader("slang_changed.txt"));
             String line = br.readLine();
             while (line != null) {
                 if(line.contains("`")){
@@ -870,6 +952,8 @@ public class Dict extends JPanel implements ItemListener{
         }catch (Exception ex){
             System.out.println(ex.getMessage());
         }
+
+
         System.out.println(dictionary.size());
         createAndShowGUI();
 
