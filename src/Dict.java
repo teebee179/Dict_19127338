@@ -21,6 +21,43 @@ public class Dict extends JPanel implements ItemListener{
     static HashMap<String, ArrayList<String> > dictionary = new HashMap<String, ArrayList<String>>();
     JPanel cards;
     static List<String> history = new ArrayList<>();
+
+    public  void resetDictionary(){
+        try {
+            //read original file to dictionary
+            BufferedReader br = new BufferedReader(new FileReader("slang.txt"));
+            //write original file to changed file
+            BufferedWriter writer = new BufferedWriter(new FileWriter("slang_changed.txt"));
+            String line = br.readLine();
+            while (line != null) {
+                writer.write(line + "\n");
+                if(line.contains("`")){
+                    String[] word = line.split("`");
+                    ArrayList<String> means = new ArrayList<>();
+                    dictionary.put(word[0],means);
+                    if(word[1].contains("|")){
+                        String[] meanings = word[1].split("[|]");
+                        for (int i = 0; i < meanings.length; i++) {
+                            dictionary.get(word[0]).add(meanings[i].trim());
+                        }
+                    }
+                    else{
+                        dictionary.get(word[0]).add(word[1]);
+                    }
+                    line = br.readLine();
+                }else {
+                    line = br.readLine();
+                }
+
+            }
+            br.close();
+            writer.close();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    //add word to file history
     public void addToHistory(String word){
         if(word != "") {
                 history.add(0, word);
@@ -188,39 +225,36 @@ public class Dict extends JPanel implements ItemListener{
             });
             historyLog.add(clearBtn, BorderLayout.PAGE_END);
 
+            //result display
+            JTextArea result = new JTextArea(10,15);
+            JScrollPane resultScrollPane = new JScrollPane(result, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            c1.gridx = 1; c1.gridy = 1;
+            card1.add(resultScrollPane, c1);
             //search button
             JButton search = new JButton("Search");
             c1.gridx = 2;
             c1.gridy = 0;
-            JLabel result = new JLabel();
-            result.setVisible(false);
             search.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     result.setText("");
                     String word = inputWord.getText();
                     //update history log
-                    if(word!="") displayHistory.append(word + "\n");
+                    if(!word.equals("")) displayHistory.append(word + "\n");
                     //write to file for next time
                     addToHistory(word);
                     //search for word
                     if(dictionary.get(word)!=null){
                         String def = "";
                         for (int i = 0; i < dictionary.get(word).size(); i++) {
-                            def += dictionary.get(word).get(i) + ",";
+                            result.append(dictionary.get(word).get(i) + "\n");
                         }
-                        result.setText(def);
-
                     }else {
-                        result.setText("Word does not exist !!!");
+                        JOptionPane.showMessageDialog(new JFrame(),
+                                "Word does not exist !!!",
+                                "Search slang word",
+                                JOptionPane.ERROR_MESSAGE);
                     }
-                    c1.gridx = 1;
-                    c1.gridy = 1;
-                    card1.add(result,c1);
-                    result.setVisible(true);
-
-
-
                 }
             });
 
@@ -236,6 +270,7 @@ public class Dict extends JPanel implements ItemListener{
 
     public class searchDefinition extends JPanel{
         public  searchDefinition(){
+            setSize(500,500);
             setLayout(new GridBagLayout());
             GridBagConstraints constraints = new GridBagConstraints();
             //search label
@@ -257,37 +292,32 @@ public class Dict extends JPanel implements ItemListener{
             JButton search = new JButton("Search");
             constraints.gridx = 2;
             constraints.gridy = 0;
-            JLabel result = new JLabel();
-            result.setVisible(false);
+            JTextArea result = new JTextArea(10,15);
+            JScrollPane scrollPane = new JScrollPane(result, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            constraints.gridx = 1; constraints.gridy = 1;
+            add(scrollPane, constraints);
             search.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     result.setText("");
                     String def = inputDef.getText();
-                    //add definition to history
-                    addToHistory(def);
                     //search for definition
-                    String allDefinition = "";
                     boolean found=false;
                     for (var entry : dictionary.entrySet()) {
                         for (int i = 0; i < entry.getValue().size(); i++) {
                             if(entry.getValue().get(i).equals(def)){
                                 found = true;
-                                allDefinition += entry.getKey().toString() + ", ";
+                                result.append(entry.getKey().toString()+"\n");
                             }
                         }
                     }
-                    result.setText(allDefinition);
                     if(found==false){
                         result.setText("Definition incorrect  !!!");
 
                     }
-                    constraints.gridx = 1;
-                    constraints.gridy = 1;
-                    add(result,constraints);
-                    result.setVisible(true);
                 }
             });
+            constraints.gridx = 2; constraints.gridy = 0;
             add(search,constraints);
         }
     }
@@ -443,7 +473,7 @@ public class Dict extends JPanel implements ItemListener{
             //add definition label
             constraints.anchor = GridBagConstraints.WEST;
             constraints.gridx = 0; constraints.gridy = 1;
-            JLabel addDef = new JLabel("Input word definition: ");
+            JLabel addDef = new JLabel("Input new definition: ");
             inputField.add(addDef,constraints);
 
             //input word field
@@ -829,12 +859,25 @@ public class Dict extends JPanel implements ItemListener{
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new FlowLayout());
         JLabel label1 = new JLabel("Your choice: ");
-        String[] choiceList = {"Search by word ","Search by definition","Show history","Add slang word","Edit slang word","Delete slang word","Reset","Random a word","Quiz by word","Quiz by definition"};
+        String[] choiceList = {"Search by word ","Search by definition","Add slang word","Edit slang word","Delete slang word","Random a word","Quiz by word","Quiz by definition"};
         JComboBox box = new JComboBox(choiceList);
         box.setEditable(false);
         box.addItemListener(this);
+        JButton resetBtn = new JButton("Reset");
+        resetBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetDictionary();
+                JOptionPane.showMessageDialog(new JFrame(),
+                        "Reset dictionary successfully",
+                        "Reset slang word",
+                        JOptionPane.INFORMATION_MESSAGE
+                        );
+            }
+        });
         topPanel.add(label1);
         topPanel.add(box);
+        topPanel.add(resetBtn);
 
         //search by word
         searchWord choice1 = new searchWord();
@@ -842,26 +885,23 @@ public class Dict extends JPanel implements ItemListener{
         //search by definition
         searchDefinition choice2 = new searchDefinition();
 
-        //see search history
-        showHistorySearch choice3 = new showHistorySearch();
-
         //add slang word
-        addSlangWord choice4 = new addSlangWord();
+        addSlangWord choice3 = new addSlangWord();
 
         //edit slang word
-        editSlangWord choice5 = new editSlangWord();
+        editSlangWord choice4 = new editSlangWord();
 
         //delete slang word
-        deleteSlangWord choice6 = new deleteSlangWord();
+        deleteSlangWord choice5 = new deleteSlangWord();
 
         //random slang word
-        randomSlangWord choice8 = new randomSlangWord();
+        randomSlangWord choice6 = new randomSlangWord();
 
         //quiz using word
-        quizUsingWord choice9 = new quizUsingWord();
+        quizUsingWord choice7 = new quizUsingWord();
 
         //quiz using definition
-        quizUsingDefinition choice10 = new quizUsingDefinition();
+        quizUsingDefinition choice8 = new quizUsingDefinition();
 
         cards = new JPanel(new CardLayout());
         cards.add(choice1,choiceList[0]);
@@ -870,25 +910,13 @@ public class Dict extends JPanel implements ItemListener{
         cards.add(choice4,choiceList[3]);
         cards.add(choice5,choiceList[4]);
         cards.add(choice6,choiceList[5]);
-        cards.add(choice8,choiceList[7]);
-        cards.add(choice9, choiceList[8]);
-        cards.add(choice10, choiceList[9]);
+        cards.add(choice7, choiceList[6]);
+        cards.add(choice8, choiceList[7]);
 
-        JPanel footer = new JPanel();
-        footer.setLayout(new BoxLayout(footer,BoxLayout.LINE_AXIS));
-
-        JButton okButton = new JButton("OK");
-        JButton cancelButton = new JButton("Cancel");
-        footer.add(okButton);
-        footer.add(Box.createRigidArea(new Dimension(20,0)));
-        footer.add(cancelButton);
-        footer.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
         add(topPanel, BorderLayout.PAGE_START);
         add(cards, BorderLayout.CENTER);
-        add(footer, BorderLayout.PAGE_END);
-
 
     }
 
